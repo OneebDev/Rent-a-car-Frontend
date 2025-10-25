@@ -1,0 +1,92 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%;
+
+    --card: 0 0% 98%;
+    --card-foreground: 0 0% 0%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 0%;
+
+    /* M-Rent A Car Brand Colors */
+    --primary: 0 100% 50%; /* Red #FF0000 */
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 0 100% 65%;
+
+    --secondary: 220 100% 50%; /* Blue #0055FF */
+    --secondary-foreground: 0 0% 100%;
+    --secondary-glow: 220 100% 65%;
+
+    --accent: 0 0% 0%; /* Black #000000 */
+    --accent-foreground: 0 0% 100%;
+
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 40%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 90%;
+    --input: 0 0% 95%;
+    --ring: 0 100% 50%;
+
+    --radius: 0.75rem;
+
+    /* Gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(0 100% 50% / 0.95), hsl(220 100% 50% / 0.95));
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%), hsl(0 0% 98%));
+    --gradient-accent: linear-gradient(90deg, hsl(0 100% 50%), hsl(220 100% 50%));
+    
+    /* Shadows */
+    --shadow-lg: 0 20px 40px -12px hsl(0 0% 0% / 0.15);
+    --shadow-red: 0 10px 30px -10px hsl(0 100% 50% / 0.3);
+    --shadow-blue: 0 10px 30px -10px hsl(220 100% 50% / 0.3);
+  }
+
+  .dark {
+    --background: 0 0% 8%;
+    --foreground: 0 0% 98%;
+
+    --card: 0 0% 12%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 0 100% 50%;
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 220 100% 55%;
+    --secondary-foreground: 0 0% 100%;
+
+    --accent: 0 0% 15%;
+    --accent-foreground: 0 0% 100%;
+
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 65%;
+
+    --border: 0 0% 20%;
+    --input: 0 0% 15%;
+    --ring: 0 100% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
