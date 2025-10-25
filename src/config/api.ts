@@ -1,5 +1,5 @@
 // API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://rent-a-car-backend.vercel.app';
 
 export const API_ENDPOINTS = {
   SEND_BOOKING_EMAIL: `${API_BASE_URL}/api/send-booking-email`,
@@ -7,3 +7,4 @@ export const API_ENDPOINTS = {
 };
 
 export default API_BASE_URL;
+
