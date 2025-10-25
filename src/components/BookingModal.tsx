@@ -140,7 +140,7 @@ const BookingModal = ({ car, isOpen, onClose }: BookingModalProps) => {
       console.log('CNIC being sent:', emailData.cnic);
       
       // Call your backend API endpoint that uses Resend
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'}/api/send-booking-email`, {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://rent-a-car-backend-t3c9.vercel.app'}/api/send-booking-email`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
