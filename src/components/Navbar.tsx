@@ -59,8 +59,11 @@ const Navbar = () => {
             ))}
           </div>
 
-          {/* CTA Button - Desktop */}
-          <div className="hidden md:block">
+          {/* CTA Buttons - Desktop */}
+          <div className="hidden md:flex items-center gap-3">
+            <Button asChild variant="outline" size="sm">
+              <Link to="/login">Login</Link>
+            </Button>
             <Button asChild className="shadow-red">
               <Link to="/cars">Book Now</Link>
             </Button>
@@ -101,11 +104,18 @@ const Navbar = () => {
                   {link.name}
                 </Link>
               ))}
-              <Button asChild className="w-full shadow-red">
-                <Link to="/cars" onClick={() => setIsOpen(false)}>
-                  Book Now
-                </Link>
-              </Button>
+              <div className="space-y-2">
+                <Button asChild variant="outline" className="w-full">
+                  <Link to="/login" onClick={() => setIsOpen(false)}>
+                    Login
+                  </Link>
+                </Button>
+                <Button asChild className="w-full shadow-red">
+                  <Link to="/cars" onClick={() => setIsOpen(false)}>
+                    Book Now
+                  </Link>
+                </Button>
+              </div>
             </div>
           </motion.div>
         )}
