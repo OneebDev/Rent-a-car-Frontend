@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import { MapPin } from "lucide-react";
 import { toast } from "react-hot-toast";
+import { useAuth } from "@/contexts/AuthContext";
 // Removed Supabase import - now using direct Resend integration
 
 const formSchema = z.object({
@@ -41,6 +42,8 @@ type FormValues = z.infer<typeof formSchema>;
 
 const CorporateEnquiries = () => {
   const [charCount, setCharCount] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user } = useAuth();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -57,7 +60,28 @@ const CorporateEnquiries = () => {
   });
 
   const onSubmit = async (data: FormValues) => {
+    // Check if user is logged in
+    if (!user) {
+      toast.error("Please log in first");
+      return;
+    }
+
+    // Prevent multiple submissions
+    if (isSubmitting) {
+      return;
+    }
+
     console.log("Form submitted:", data);
+    
+    // Set submitting state and clear form immediately
+    setIsSubmitting(true);
+    
+    // Store form data before clearing
+    const formDataToSend = { ...data };
+    
+    // Clear form fields immediately after starting submission
+    form.reset();
+    setCharCount(0);
     
     // Send email notification using Resend directly
     try {
@@ -69,14 +93,14 @@ const CorporateEnquiries = () => {
         body: JSON.stringify({
           type: 'corporate',
           data: {
-            name: data.name,
-            email: data.email,
-            phone: data.phone,
-            location: data.location,
-            numCars: data.numCars,
-            numDays: data.numDays,
-            purpose: data.purpose,
-            details: data.details,
+            name: formDataToSend.name,
+            email: formDataToSend.email,
+            phone: formDataToSend.phone,
+            location: formDataToSend.location,
+            numCars: formDataToSend.numCars,
+            numDays: formDataToSend.numDays,
+            purpose: formDataToSend.purpose,
+            details: formDataToSend.details,
           }
         })
       });
@@ -89,10 +113,9 @@ const CorporateEnquiries = () => {
     } catch (error) {
       console.error('Error:', error);
       toast.error("Enquiry submitted but email notification failed");
+    } finally {
+      setIsSubmitting(false);
     }
-
-    form.reset();
-    setCharCount(0);
   };
 
   return (
@@ -286,8 +309,9 @@ const CorporateEnquiries = () => {
                     type="submit" 
                     size="lg"
                     className="w-full sm:w-auto px-12 sm:px-16"
+                    disabled={isSubmitting}
                   >
-                    Submit
+                    {isSubmitting ? "Submitting..." : "Submit"}
                   </Button>
                 </div>
               </form>

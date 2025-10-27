@@ -29,6 +29,7 @@ const BookingModal = ({ car, isOpen, onClose }: BookingModalProps) => {
     dropoffLocation: "",
   });
   const [differentDropoff, setDifferentDropoff] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const today = new Date().toISOString().split('T')[0];
 
@@ -82,6 +83,11 @@ const BookingModal = ({ car, isOpen, onClose }: BookingModalProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Prevent multiple submissions
+    if (isSubmitting) {
+      return;
+    }
+
     // Validation
     if (!formData.name || !formData.email || !formData.phone || !formData.cnic || !formData.pickupDate || !formData.returnDate || !formData.pickupLocation) {
       toast.error("Please fill in all fields");
@@ -117,6 +123,24 @@ const BookingModal = ({ car, isOpen, onClose }: BookingModalProps) => {
       toast.error("Please enter a valid CNIC in format: 42101-1234567-8");
       return;
     }
+
+    // Set submitting state and clear form immediately
+    setIsSubmitting(true);
+    
+    // Clear form fields immediately after starting submission
+    setFormData({
+      name: "",
+      email: "",
+      phone: "",
+      cnic: "",
+      pickupDate: "",
+      pickupTime: "10:00",
+      returnDate: "",
+      returnTime: "10:00",
+      pickupLocation: "",
+      dropoffLocation: "",
+    });
+    setDifferentDropoff(false);
 
     // Send email notification using Resend directly
     try {
@@ -159,24 +183,10 @@ const BookingModal = ({ car, isOpen, onClose }: BookingModalProps) => {
     } catch (error) {
       console.error('Error:', error);
       toast.error("Booking submitted but email notification failed");
+    } finally {
+      setIsSubmitting(false);
+      onClose();
     }
-
-    onClose();
-    
-    // Reset form
-    setFormData({
-      name: "",
-      email: "",
-      phone: "",
-      cnic: "",
-      pickupDate: "",
-      pickupTime: "10:00",
-      returnDate: "",
-      returnTime: "10:00",
-      pickupLocation: "",
-      dropoffLocation: "",
-    });
-    setDifferentDropoff(false);
   };
 
   const days = calculateDays();
@@ -377,8 +387,8 @@ const BookingModal = ({ car, isOpen, onClose }: BookingModalProps) => {
             <Button type="button" variant="outline" onClick={onClose} className="flex-1">
               Cancel
             </Button>
-            <Button type="submit" className="flex-1 shadow-red">
-              Confirm Booking
+            <Button type="submit" className="flex-1 shadow-red" disabled={isSubmitting}>
+              {isSubmitting ? "Submitting..." : "Confirm Booking"}
             </Button>
           </div>
         </form>

@@ -10,14 +10,25 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "react-hot-toast";
 import { carsData } from "@/data/carsData";
 
 const CarDetails = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
   const [isBookingOpen, setIsBookingOpen] = useState(false);
+  const { user } = useAuth();
 
   const car = carsData.find((c) => c.slug === slug);
+
+  const handleBookNow = () => {
+    if (!user) {
+      toast.error("Please log in first");
+      return;
+    }
+    setIsBookingOpen(true);
+  };
 
   if (!car) {
     return (
@@ -196,7 +207,7 @@ const CarDetails = () => {
                     </div>
 
                     <Button
-                      onClick={() => setIsBookingOpen(true)}
+                      onClick={handleBookNow}
                       size="lg"
                       className="w-full shadow-red"
                     >

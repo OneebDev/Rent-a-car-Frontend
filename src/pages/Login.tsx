@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Eye, EyeOff, Mail, Lock, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,11 +9,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "react-hot-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { signIn, signInWithGoogle } = useAuth();
+  const navigate = useNavigate();
+  
   const [loginData, setLoginData] = useState({
     email: "",
     password: "",
@@ -26,8 +31,13 @@ const Login = () => {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Prevent multiple submissions
+    if (isSubmitting) {
+      return;
+    }
     
     // Basic validation
     if (!loginData.email || !loginData.password) {
@@ -42,14 +52,47 @@ const Login = () => {
       return;
     }
 
-    // Simulate login process
-    toast.success("Login successful!");
-    console.log("Login data:", loginData);
+    // Set submitting state and clear form immediately
+    setIsSubmitting(true);
+    
+    // Store form data before clearing
+    const formDataToSend = { ...loginData };
+    
+    // Clear form fields immediately after starting submission
+    setLoginData({
+      email: "",
+      password: "",
+    });
+
+    try {
+      // Firebase authentication
+      await signIn(formDataToSend.email, formDataToSend.password);
+      
+      // Redirect to home page after successful login
+      navigate('/');
+    } catch (error) {
+      console.error('Login error:', error);
+      // Form will remain cleared, user needs to refill if they want to try again
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleGoogleLogin = () => {
-    toast.success("Google login initiated!");
-    // Implement Google OAuth here
+  const handleGoogleLogin = async () => {
+    if (isSubmitting) {
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      await signInWithGoogle();
+      navigate('/');
+    } catch (error) {
+      console.error('Google login error:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -95,6 +138,7 @@ const Login = () => {
                     variant="outline"
                     className="w-full h-12 text-base font-medium"
                     onClick={handleGoogleLogin}
+                    disabled={isSubmitting}
                   >
                     <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
                       <path
@@ -114,7 +158,7 @@ const Login = () => {
                         d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                       />
                     </svg>
-                    Continue with Google
+                    {isSubmitting ? "Signing in..." : "Continue with Google"}
                   </Button>
 
                   {/* Divider */}
@@ -176,8 +220,8 @@ const Login = () => {
                       </div>
                     </div>
 
-                    <Button type="submit" className="w-full h-12 text-base font-medium shadow-red">
-                      LOGIN
+                    <Button type="submit" className="w-full h-12 text-base font-medium shadow-red" disabled={isSubmitting}>
+                      {isSubmitting ? "Signing in..." : "LOGIN"}
                     </Button>
                   </form>
 
@@ -242,16 +286,16 @@ const Login = () => {
                       </div>
                     </div>
 
-                    <Button type="submit" className="w-full h-12 text-base font-medium shadow-red">
-                      LOGIN
+                    <Button type="submit" className="w-full h-12 text-base font-medium shadow-red" disabled={isSubmitting}>
+                      {isSubmitting ? "Signing in..." : "LOGIN"}
                     </Button>
                   </form>
 
                   <div className="text-center text-sm text-muted-foreground">
                     Don't have a corporate account?{" "}
-                    <Link to="/signup" className="text-primary hover:underline font-medium">
-                      Sign up here
-                    </Link>
+                    <span className="text-muted-foreground">
+                      Contact our corporate team for account setup
+                    </span>
                   </div>
                 </TabsContent>
               </Tabs>
@@ -266,3 +310,4 @@ const Login = () => {
 };
 
 export default Login;
+

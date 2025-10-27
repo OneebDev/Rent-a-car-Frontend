@@ -1,12 +1,16 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Car } from "lucide-react";
+import { Menu, X, Car, LogOut, User, Calendar } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "react-hot-toast";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const location = useLocation();
+  const { user, logout } = useAuth();
 
   const navLinks = [
     { name: "Home", path: "/" },
@@ -17,6 +21,29 @@ const Navbar = () => {
   ];
 
   const isActive = (path: string) => location.pathname === path;
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setShowUserMenu(false);
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
+  const getUserDisplayName = () => {
+    if (user?.displayName) {
+      return user.displayName;
+    }
+    if (user?.email) {
+      // Extract only the username part before any numbers
+      const emailUsername = user.email.split('@')[0];
+      // Remove any trailing numbers from the username
+      const usernameWithoutNumbers = emailUsername.replace(/\d+$/, '');
+      return usernameWithoutNumbers || emailUsername;
+    }
+    return 'User';
+  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
@@ -61,12 +88,61 @@ const Navbar = () => {
 
           {/* CTA Buttons - Desktop */}
           <div className="hidden md:flex items-center gap-3">
-            <Button asChild variant="outline" size="sm">
-              <Link to="/login">Login</Link>
-            </Button>
-            <Button asChild className="shadow-red">
-              <Link to="/cars">Book Now</Link>
-            </Button>
+            {user ? (
+              <div className="relative">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="flex items-center gap-2"
+                >
+                  <User className="h-4 w-4" />
+                  {getUserDisplayName()}
+                </Button>
+                {showUserMenu && (
+                  <div className="absolute right-0 top-full mt-2 w-48 bg-background border border-border rounded-md shadow-lg z-50">
+                    <div className="py-2">
+                      <div className="px-4 py-2 text-sm text-muted-foreground border-b border-border">
+                        {user.email}
+                      </div>
+                      <Link
+                        to="/profile"
+                        onClick={() => setShowUserMenu(false)}
+                        className="w-full px-4 py-2 text-left text-sm hover:bg-muted flex items-center gap-2"
+                      >
+                        <User className="h-4 w-4" />
+                        Profile
+                      </Link>
+                      <Link
+                        to="/my-bookings"
+                        onClick={() => setShowUserMenu(false)}
+                        className="w-full px-4 py-2 text-left text-sm hover:bg-muted flex items-center gap-2"
+                      >
+                        <Calendar className="h-4 w-4" />
+                        My Bookings
+                      </Link>
+                      <button
+                        onClick={handleLogout}
+                        className="w-full px-4 py-2 text-left text-sm hover:bg-muted flex items-center gap-2"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        Sign Out
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Button asChild variant="outline" size="sm" className="hover:bg-gray-100 hover:border-gray-300 hover:text-gray-700">
+                  <Link to="/login">Login</Link>
+                </Button>
+                <span className="text-muted-foreground">|</span>
+                <Button asChild size="sm" className="bg-red-600 hover:bg-red-500 text-white border-red-600 hover:border-red-500">
+                  <Link to="/signup">Signup</Link>
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -105,16 +181,62 @@ const Navbar = () => {
                 </Link>
               ))}
               <div className="space-y-2">
-                <Button asChild variant="outline" className="w-full">
-                  <Link to="/login" onClick={() => setIsOpen(false)}>
-                    Login
-                  </Link>
-                </Button>
-                <Button asChild className="w-full shadow-red">
-                  <Link to="/cars" onClick={() => setIsOpen(false)}>
-                    Book Now
-                  </Link>
-                </Button>
+                {user ? (
+                  <div className="space-y-2">
+                    <div className="px-4 py-2 text-sm text-muted-foreground border-b border-border">
+                      <div className="font-medium">{getUserDisplayName()}</div>
+                      <div className="text-xs">{user.email}</div>
+                    </div>
+                    <Button asChild variant="outline" className="w-full">
+                      <Link
+                        to="/profile"
+                        onClick={() => {
+                          setShowUserMenu(false);
+                          setIsOpen(false);
+                        }}
+                      >
+                        <User className="h-4 w-4 mr-2" />
+                        Profile
+                      </Link>
+                    </Button>
+                    <Button asChild variant="outline" className="w-full">
+                      <Link
+                        to="/my-bookings"
+                        onClick={() => {
+                          setShowUserMenu(false);
+                          setIsOpen(false);
+                        }}
+                      >
+                        <Calendar className="h-4 w-4 mr-2" />
+                        My Bookings
+                      </Link>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => {
+                        handleLogout();
+                        setIsOpen(false);
+                      }}
+                    >
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Sign Out
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Button asChild variant="outline" className="w-full hover:bg-gray-100 hover:border-gray-300 hover:text-gray-700">
+                      <Link to="/login" onClick={() => setIsOpen(false)}>
+                        Login
+                      </Link>
+                    </Button>
+                    <Button asChild className="w-full bg-red-600 hover:bg-red-500 text-white border-red-600 hover:border-red-500">
+                      <Link to="/signup" onClick={() => setIsOpen(false)}>
+                        Signup
+                      </Link>
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           </motion.div>

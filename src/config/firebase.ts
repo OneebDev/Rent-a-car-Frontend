@@ -1,0 +1,26 @@
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+import { getAuth } from "firebase/auth";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyCk9XLNFswHNjcaJAriSlsNRFaAwbQF0xc",
+  authDomain: "rent-a-car-user.firebaseapp.com",
+  projectId: "rent-a-car-user",
+  storageBucket: "rent-a-car-user.firebasestorage.app",
+  messagingSenderId: "984381096489",
+  appId: "1:984381096489:web:4b4043dcdddaab4f4ad238",
+  measurementId: "G-VF05GV61XH"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+const auth = getAuth(app);
+
+export { auth, analytics };
+export default app;

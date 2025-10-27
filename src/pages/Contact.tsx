@@ -19,9 +19,15 @@ const Contact = () => {
     subject: "",
     message: "",
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Prevent multiple submissions
+    if (isSubmitting) {
+      return;
+    }
 
     // Validation
     if (!formData.name || !formData.email || !formData.message) {
@@ -36,6 +42,21 @@ const Contact = () => {
       return;
     }
 
+    // Set submitting state and clear form immediately
+    setIsSubmitting(true);
+    
+    // Store form data before clearing
+    const formDataToSend = { ...formData };
+    
+    // Clear form fields immediately after starting submission
+    setFormData({
+      name: "",
+      email: "",
+      phone: "",
+      subject: "",
+      message: "",
+    });
+
     // Send email notification using Resend directly
     try {
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'}/api/send-booking-email`, {
@@ -46,11 +67,11 @@ const Contact = () => {
         body: JSON.stringify({
           type: 'contact',
           data: {
-            name: formData.name,
-            email: formData.email,
-            phone: formData.phone,
-            subject: formData.subject || 'General Inquiry',
-            message: formData.message,
+            name: formDataToSend.name,
+            email: formDataToSend.email,
+            phone: formDataToSend.phone,
+            subject: formDataToSend.subject || 'General Inquiry',
+            message: formDataToSend.message,
           }
         })
       });
@@ -63,16 +84,9 @@ const Contact = () => {
     } catch (error) {
       console.error('Error:', error);
       toast.error("Message submitted but email notification failed");
+    } finally {
+      setIsSubmitting(false);
     }
-    
-    // Reset form
-    setFormData({
-      name: "",
-      email: "",
-      phone: "",
-      subject: "",
-      message: "",
-    });
   };
 
   const contactInfo = [
@@ -231,9 +245,9 @@ const Contact = () => {
                         />
                       </div>
 
-                      <Button type="submit" size="lg" className="w-full shadow-red">
+                      <Button type="submit" size="lg" className="w-full shadow-red" disabled={isSubmitting}>
                         <Send className="h-4 w-4 mr-2" />
-                        Send Message
+                        {isSubmitting ? "Sending..." : "Send Message"}
                       </Button>
                     </form>
                   </CardContent>
