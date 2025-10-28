@@ -83,11 +83,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signInWithGoogle = async () => {
     try {
       const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({
+        prompt: 'select_account'
+      });
+      
       await signInWithPopup(auth, provider);
       toast.success('Login successful!');
     } catch (error: any) {
       console.error('Google sign in error:', error);
-      toast.error(error.message || 'Failed to sign in with Google');
+      
+      // More detailed error handling
+      if (error.code === 'auth/popup-closed-by-user') {
+        toast.error('Sign in cancelled');
+      } else if (error.code === 'auth/unauthorized-domain') {
+        toast.error('Domain not authorized. Please contact support.');
+      } else {
+        toast.error(error.message || 'Failed to sign in with Google');
+      }
+      
       throw error;
     }
   };
