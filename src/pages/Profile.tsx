@@ -12,6 +12,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "react-hot-toast";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import maleAvatar from "@/assets/male-avatar.png";
+import femaleAvatar from "@/assets/female-avatar.png";
 
 interface Address {
   id: string;
@@ -171,8 +173,12 @@ const Profile = () => {
                 <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
                   {/* Avatar */}
                   <div className="relative">
-                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white text-2xl font-bold border-4 border-border shadow-red">
-                      {profileData.name.split(' ').map(n => n[0]).join('')}
+                    <div className="w-24 h-24 rounded-full border-4 border-border shadow-lg overflow-hidden">
+                      <img 
+                        src={profileData.gender.toLowerCase() === 'male' ? maleAvatar : femaleAvatar}
+                        alt={profileData.gender}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
                     <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white shadow-lg"></div>
                   </div>
@@ -300,7 +306,7 @@ const Profile = () => {
 
                 {isEditing && (
                   <div className="flex gap-3">
-                    <Button onClick={handleSaveProfile} className="bg-green-600 hover:bg-green-700">
+                    <Button onClick={handleSaveProfile} className="bg-red-600 hover:bg-red-700">
                       Save Changes
                     </Button>
                     <Button
@@ -511,7 +517,7 @@ const Profile = () => {
                       />
                     </div>
                     <div className="flex gap-3">
-                      <Button onClick={handleSavePassword} className="bg-green-600 hover:bg-green-700">
+                      <Button onClick={handleSavePassword} className="bg-red-600 hover:bg-red-700">
                         Save Password
                       </Button>
                       <Button
