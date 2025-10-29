@@ -8,6 +8,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "react-hot-toast";
 import type { Car } from "@/data/carsData";
 // import { supabase } from "@/integrations/supabase/client"; // Commented out - using Resend directly
+import { useAuth } from "@/contexts/AuthContext";
+import { addBooking } from "@/services/firestore";
 
 interface BookingModalProps {
   car: Car;
@@ -16,6 +18,7 @@ interface BookingModalProps {
 }
 
 const BookingModal = ({ car, isOpen, onClose }: BookingModalProps) => {
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -124,10 +127,12 @@ const BookingModal = ({ car, isOpen, onClose }: BookingModalProps) => {
       return;
     }
 
-    // Set submitting state and clear form immediately
+    // Set submitting state
     setIsSubmitting(true);
-    
-    // Clear form fields immediately after starting submission
+
+    const localForm = { ...formData };
+
+    // Clear form fields after starting submission
     setFormData({
       name: "",
       email: "",
@@ -144,18 +149,35 @@ const BookingModal = ({ car, isOpen, onClose }: BookingModalProps) => {
 
     // Send email notification using Resend directly
     try {
+      // Persist booking in Firestore if logged in
+      if (user) {
+        const status = new Date(localForm.pickupDate) > new Date() ? 'scheduled' : 'active';
+        const bookingPayload = {
+          carName: car.name,
+          pickupDate: localForm.pickupDate,
+          returnDate: localForm.returnDate,
+          pickupLocation: localForm.pickupLocation,
+          dropoffLocation: differentDropoff ? localForm.dropoffLocation : localForm.pickupLocation,
+          totalDays: days,
+          totalPrice: total,
+          status: status as 'scheduled' | 'active',
+          bookingDate: new Date().toISOString(),
+        } as const;
+        await addBooking(user.uid, bookingPayload as any);
+      }
+
       const emailData = {
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        cnic: formData.cnic,
+        name: localForm.name,
+        email: localForm.email,
+        phone: localForm.phone,
+        cnic: localForm.cnic,
         carName: car.name,
-        pickupLocation: formData.pickupLocation,
-        dropoffLocation: differentDropoff ? formData.dropoffLocation : formData.pickupLocation,
-        pickupDate: formData.pickupDate,
-        pickupTime: formData.pickupTime,
-        returnDate: formData.returnDate,
-        returnTime: formData.returnTime,
+        pickupLocation: localForm.pickupLocation,
+        dropoffLocation: differentDropoff ? localForm.dropoffLocation : localForm.pickupLocation,
+        pickupDate: localForm.pickupDate,
+        pickupTime: localForm.pickupTime,
+        returnDate: localForm.returnDate,
+        returnTime: localForm.returnTime,
         totalDays: days.toString(),
         totalPrice: total.toFixed(2),
       };
@@ -179,7 +201,7 @@ const BookingModal = ({ car, isOpen, onClose }: BookingModalProps) => {
         throw new Error('Failed to send email');
       }
 
-      toast.success(`Booking request submitted! We'll contact you at ${formData.email}`);
+      toast.success(`Booking request submitted! We'll contact you at ${localForm.email}`);
     } catch (error) {
       console.error('Error:', error);
       toast.error("Booking submitted but email notification failed");

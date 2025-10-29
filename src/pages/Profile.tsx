@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { User, MapPin, FileText, Edit, Key, Plus, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,17 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import maleAvatar from "@/assets/male-avatar.png";
 import femaleAvatar from "@/assets/female-avatar.png";
+import {
+	getOrCreateUserProfile,
+	updateUserProfile,
+	listAddresses,
+	addAddress as addAddressApi,
+	deleteAddress as deleteAddressApi,
+	setDefaultAddress as setDefaultAddressApi,
+	addDocument as addDocumentApi,
+	listDocuments as listDocumentsApi,
+	deleteDocument as deleteDocumentApi,
+} from "@/services/firestore";
 
 interface Address {
   id: string;
@@ -39,25 +50,17 @@ const Profile = () => {
   
   // Profile data state
   const [profileData, setProfileData] = useState({
-    name: user?.displayName || "Oneeb Arif",
-    email: user?.email || "oneeb593@gmail.com",
-    phone: "03278443316",
-    address: "--",
-    gender: "male",
-    dob: "4 November",
-    createdOn: "10/28/25, 3:01 AM"
+    name: user?.displayName || "",
+    email: user?.email || "",
+    phone: "",
+    address: "",
+    gender: "",
+    dob: "",
+    createdOn: "",
   });
 
   // Addresses state
-  const [addresses, setAddresses] = useState<Address[]>([
-    {
-      id: "1",
-      type: "Home",
-      address: "123 Main Street, Block A",
-      city: "Karachi",
-      isDefault: true
-    }
-  ]);
+  const [addresses, setAddresses] = useState<Address[]>([]);
 
   // Documents state
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -79,9 +82,26 @@ const Profile = () => {
     setIsEditing(true);
   };
 
-  const handleSaveProfile = () => {
-    toast.success("Profile updated successfully!");
-    setIsEditing(false);
+  const handleSaveProfile = async () => {
+    if (!user) {
+      toast.error("Please login to save your profile");
+      return;
+    }
+    try {
+      await updateUserProfile(user.uid, {
+        name: profileData.name,
+        email: profileData.email,
+        phone: profileData.phone,
+        address: profileData.address,
+        gender: profileData.gender,
+        dob: profileData.dob,
+      });
+      toast.success("Profile updated successfully!");
+      setIsEditing(false);
+    } catch (e: any) {
+      console.error('Update profile error', e);
+      toast.error(e?.message || "Failed to update profile");
+    }
   };
 
   const handleChangePassword = () => {
@@ -98,29 +118,46 @@ const Profile = () => {
     setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
   };
 
-  const handleAddAddress = () => {
-    const newAddress: Address = {
-      id: Date.now().toString(),
+  const handleAddAddress = async () => {
+    if (!user) {
+      toast.error("Please login to add address");
+      return;
+    }
+    const newAddressData = {
       type: "Home",
       address: "New Address",
       city: "Karachi",
-      isDefault: false
+      isDefault: addresses.length === 0,
     };
-    setAddresses([...addresses, newAddress]);
-    toast.success("Address added successfully!");
+    try {
+      const created = await addAddressApi(user.uid, newAddressData);
+      setAddresses([...addresses, created]);
+      toast.success("Address added successfully!");
+    } catch (e) {
+      toast.error("Failed to add address");
+    }
   };
 
-  const handleDeleteAddress = (id: string) => {
-    setAddresses(addresses.filter(addr => addr.id !== id));
-    toast.success("Address deleted successfully!");
+  const handleDeleteAddress = async (id: string) => {
+    if (!user) return;
+    try {
+      await deleteAddressApi(user.uid, id);
+      setAddresses(addresses.filter(addr => addr.id !== id));
+      toast.success("Address deleted successfully!");
+    } catch (e) {
+      toast.error("Failed to delete address");
+    }
   };
 
-  const handleSetDefaultAddress = (id: string) => {
-    setAddresses(addresses.map(addr => ({
-      ...addr,
-      isDefault: addr.id === id
-    })));
-    toast.success("Default address updated!");
+  const handleSetDefaultAddress = async (id: string) => {
+    if (!user) return;
+    try {
+      await setDefaultAddressApi(user.uid, id);
+      setAddresses(addresses.map(addr => ({ ...addr, isDefault: addr.id === id })));
+      toast.success("Default address updated!");
+    } catch (e) {
+      toast.error("Failed to set default address");
+    }
   };
 
   const handleFileUpload = (type: 'front' | 'back', file: File) => {
@@ -131,29 +168,72 @@ const Profile = () => {
     }
   };
 
-  const handleSubmitDocument = () => {
+  const handleSubmitDocument = async () => {
+    if (!user) {
+      toast.error("Please login to submit documents");
+      return;
+    }
     if (!newDocument.number || !newDocument.frontImage || !newDocument.backImage) {
       toast.error("Please fill all required fields");
       return;
     }
 
-    const document: Document = {
-      id: Date.now().toString(),
-      type: newDocument.type,
-      number: newDocument.number,
-      frontImage: URL.createObjectURL(newDocument.frontImage),
-      backImage: URL.createObjectURL(newDocument.backImage)
+    try {
+      const saved = await addDocumentApi(user.uid, {
+        type: newDocument.type,
+        number: newDocument.number,
+        frontFile: newDocument.frontImage,
+        backFile: newDocument.backImage,
+      });
+      setDocuments([
+        ...documents,
+        {
+          id: saved.id,
+          type: saved.type,
+          number: saved.number,
+          frontImage: saved.frontImageUrl,
+          backImage: saved.backImageUrl,
+        },
+      ]);
+      setNewDocument({ type: "CNIC", number: "", frontImage: null, backImage: null });
+      toast.success("Document submitted successfully!");
+    } catch (e) {
+      toast.error("Failed to submit document");
+    }
+  };
+
+  const handleDeleteDocument = async (id: string) => {
+    if (!user) return;
+    try {
+      await deleteDocumentApi(user.uid, id);
+      setDocuments(documents.filter(doc => doc.id !== id));
+      toast.success("Document deleted successfully!");
+    } catch (e) {
+      toast.error("Failed to delete document");
+    }
+  };
+
+  useEffect(() => {
+    const load = async () => {
+      if (!user) return;
+      const profile = await getOrCreateUserProfile(user.uid, { name: user.displayName || "", email: user.email || "" });
+      setProfileData({
+        name: profile.name || "",
+        email: profile.email || "",
+        phone: profile.phone || "",
+        address: profile.address || "",
+        gender: profile.gender || "",
+        dob: profile.dob || "",
+        createdOn: profile.createdOn?.toDate ? profile.createdOn.toDate().toLocaleString() : "",
+      });
+      const [addr, docs] = await Promise.all([listAddresses(user.uid), listDocumentsApi(user.uid)]);
+      setAddresses(addr);
+      setDocuments(
+        docs.map((d) => ({ id: d.id, type: d.type, number: d.number, frontImage: d.frontImageUrl, backImage: d.backImageUrl }))
+      );
     };
-
-    setDocuments([...documents, document]);
-    setNewDocument({ type: "CNIC", number: "", frontImage: null, backImage: null });
-    toast.success("Document submitted successfully!");
-  };
-
-  const handleDeleteDocument = (id: string) => {
-    setDocuments(documents.filter(doc => doc.id !== id));
-    toast.success("Document deleted successfully!");
-  };
+    load();
+  }, [user]);
 
   return (
     <div className="min-h-screen flex flex-col bg-background">

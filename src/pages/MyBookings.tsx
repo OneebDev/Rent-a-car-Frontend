@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Calendar, MapPin, Clock, Car, CheckCircle, XCircle, AlertCircle, Eye, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "react-hot-toast";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { listBookingsByStatus } from "@/services/firestore";
 
 interface Booking {
   id: string;
@@ -30,63 +31,18 @@ const MyBookings = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("active");
 
-  // Dummy booking data
-  const [bookings, setBookings] = useState<Booking[]>([
-    {
-      id: "1",
-      carName: "Toyota Corolla",
-      carImage: "/api/placeholder/300/200",
-      pickupDate: "2024-01-15",
-      returnDate: "2024-01-18",
-      pickupLocation: "Karachi Airport",
-      dropoffLocation: "Karachi Airport",
-      totalDays: 3,
-      totalPrice: 15000,
-      status: 'active',
-      bookingDate: "2024-01-10",
-      rating: 5
-    },
-    {
-      id: "2",
-      carName: "Honda Civic",
-      carImage: "/api/placeholder/300/200",
-      pickupDate: "2024-02-01",
-      returnDate: "2024-02-05",
-      pickupLocation: "Lahore City Center",
-      dropoffLocation: "Lahore Airport",
-      totalDays: 4,
-      totalPrice: 20000,
-      status: 'scheduled',
-      bookingDate: "2024-01-20"
-    },
-    {
-      id: "3",
-      carName: "Suzuki Swift",
-      carImage: "/api/placeholder/300/200",
-      pickupDate: "2023-12-20",
-      returnDate: "2023-12-22",
-      pickupLocation: "Islamabad Airport",
-      dropoffLocation: "Islamabad Airport",
-      totalDays: 2,
-      totalPrice: 8000,
-      status: 'completed',
-      bookingDate: "2023-12-15",
-      rating: 4
-    },
-    {
-      id: "4",
-      carName: "Toyota Fortuner",
-      carImage: "/api/placeholder/300/200",
-      pickupDate: "2023-11-10",
-      returnDate: "2023-11-15",
-      pickupLocation: "Karachi Port",
-      dropoffLocation: "Karachi Port",
-      totalDays: 5,
-      totalPrice: 25000,
-      status: 'cancelled',
-      bookingDate: "2023-11-05"
-    }
-  ]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+
+  useEffect(() => {
+    const load = async () => {
+      if (!user) return;
+      const res = await listBookingsByStatus(user.uid);
+      // flatten with tag retained if needed; we can compute per status below
+      const all = [...res.active, ...res.scheduled, ...res.history] as unknown as Booking[];
+      setBookings(all);
+    };
+    load();
+  }, [user]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
