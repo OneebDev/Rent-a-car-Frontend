@@ -175,6 +175,35 @@ export async function deleteDocument(uid: string, id: string) {
 	await deleteDoc(doc(db, "users", uid, "documents", id));
 }
 
+export async function updateDocument(
+  uid: string,
+  id: string,
+  data: { type?: string; number?: string; frontFile?: File | null; backFile?: File | null }
+): Promise<DocumentItem> {
+  const dref = doc(db, "users", uid, "documents", id);
+  const toUpdate: any = {};
+  if (data.type !== undefined) toUpdate.type = data.type;
+  if (data.number !== undefined) toUpdate.number = data.number;
+
+  // If any new files provided, upload and set URLs
+  if (data.frontFile) {
+    const frontRef = ref(storage, `users/${uid}/documents/${id}/front`);
+    await uploadBytes(frontRef, data.frontFile);
+    toUpdate.frontImageUrl = await getDownloadURL(frontRef);
+  }
+  if (data.backFile) {
+    const backRef = ref(storage, `users/${uid}/documents/${id}/back`);
+    await uploadBytes(backRef, data.backFile);
+    toUpdate.backImageUrl = await getDownloadURL(backRef);
+  }
+
+  if (Object.keys(toUpdate).length > 0) {
+    await updateDoc(dref, toUpdate);
+  }
+  const snap = await getDoc(dref);
+  return { id, ...(snap.data() as Omit<DocumentItem, "id">) };
+}
+
 // Bookings
 export async function addBooking(uid: string, booking: Omit<BookingItem, "id">): Promise<BookingItem> {
 	const refCreated = await addDoc(bookingsCol(uid), booking);

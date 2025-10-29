@@ -36,11 +36,46 @@ const Signup = () => {
     birthYear: "",
   });
 
+  // Format phone number for Pakistan (+92 XXX XXXXXXXX)
+  const formatPhoneNumber = (value: string) => {
+    // Remove all non-digit characters
+    const digits = value.replace(/\D/g, '');
+    
+    // If starts with 92, treat as country code
+    if (digits.startsWith('92')) {
+      const rest = digits.slice(2);
+      if (rest.length <= 3) return `+92 ${rest}`;
+      if (rest.length <= 10) return `+92 ${rest.slice(0, 3)} ${rest.slice(3)}`;
+      return `+92 ${rest.slice(0, 3)} ${rest.slice(3, 10)}`;
+    }
+    
+    // If starts with 0, remove it and add +92
+    if (digits.startsWith('0')) {
+      const rest = digits.slice(1);
+      if (rest.length <= 3) return `+92 ${rest}`;
+      if (rest.length <= 10) return `+92 ${rest.slice(0, 3)} ${rest.slice(3)}`;
+      return `+92 ${rest.slice(0, 3)} ${rest.slice(3, 10)}`;
+    }
+    
+    // Otherwise format as regular number
+    if (digits.length <= 3) return `+92 ${digits}`;
+    if (digits.length <= 10) return `+92 ${digits.slice(0, 3)} ${digits.slice(3)}`;
+    return `+92 ${digits.slice(0, 3)} ${digits.slice(3, 10)}`;
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSignupData({
-      ...signupData,
-      [e.target.name]: e.target.value,
-    });
+    if (e.target.name === 'phone') {
+      const formatted = formatPhoneNumber(e.target.value);
+      setSignupData({
+        ...signupData,
+        phone: formatted,
+      });
+    } else {
+      setSignupData({
+        ...signupData,
+        [e.target.name]: e.target.value,
+      });
+    }
   };
 
   const handleSelectChange = (field: string, value: string) => {
