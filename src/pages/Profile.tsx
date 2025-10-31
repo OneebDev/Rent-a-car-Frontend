@@ -223,10 +223,10 @@ const Profile = () => {
                           <Edit className="h-4 w-4 mr-2" />
                           EDIT
                         </Button>
-                        <Button onClick={() => setIsChangingPassword(true)} variant="outline" className="border-primary text-primary hover:bg-primary hover:text-white">
+                        {/* <Button onClick={() => setIsChangingPassword(true)} variant="outline" className="border-primary text-primary hover:bg-primary hover:text-white">
                           <Key className="h-4 w-4 mr-2" />
                           CHANGE PASSWORD
-                        </Button>
+                        </Button> */}
                       </div>
                     </div>
                   </div>
