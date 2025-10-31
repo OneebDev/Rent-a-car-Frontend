@@ -14,6 +14,7 @@ import { toast } from "react-hot-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { updateUserProfile } from "@/services/firestore";
 
 const Signup = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -164,18 +165,28 @@ const Signup = () => {
     setAcceptTerms(false);
 
     try {
-      // Create Firebase account with email verification
-      await signUp(formDataToStore.email, formDataToStore.password, `${formDataToStore.firstName} ${formDataToStore.lastName}`);
-      
-      // Store additional user data in localStorage for later use
-      localStorage.setItem('userProfile', JSON.stringify({
-        firstName: formDataToStore.firstName,
-        lastName: formDataToStore.lastName,
+      // Create Firebase account with email verification and get uid
+      const uid = await signUp(
+        formDataToStore.email,
+        formDataToStore.password,
+        `${formDataToStore.firstName} ${formDataToStore.lastName}`
+      );
+
+      // Persist profile to Firestore so Profile page auto-loads it after login
+      const pad = (n: string) => n.toString().padStart(2, '0');
+      const dob = `${formDataToStore.birthYear}-${pad(formDataToStore.birthMonth)}-${pad(formDataToStore.birthDay)}`;
+      const genderCap =
+        formDataToStore.gender === 'male' ? 'Male' :
+        formDataToStore.gender === 'female' ? 'Female' : 'Other';
+      await updateUserProfile(uid, {
+        uid,
+        name: `${formDataToStore.firstName} ${formDataToStore.lastName}`,
+        email: formDataToStore.email,
         phone: formDataToStore.phone,
-        gender: formDataToStore.gender,
-        birthDate: `${formDataToStore.birthYear}-${formDataToStore.birthMonth}-${formDataToStore.birthDay}`,
-      }));
-      
+        gender: genderCap,
+        dob,
+      });
+
       // Redirect to login page
       navigate('/login');
     } catch (error) {

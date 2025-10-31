@@ -15,7 +15,7 @@ import { toast } from 'react-hot-toast';
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  signUp: (email: string, password: string, name: string) => Promise<void>;
+  signUp: (email: string, password: string, name: string) => Promise<string>;
   signIn: (email: string, password: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
@@ -45,15 +45,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return unsubscribe;
   }, []);
 
-  const signUp = async (email: string, password: string, name: string) => {
+  const signUp = async (email: string, password: string, name: string): Promise<string> => {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       
-      // Send email verification
+      // Send email verification and immediately sign out so unverified sessions are not active
       await sendEmailVerification(user);
+      await signOut(auth);
       
-      toast.success('Account created! Please check your email and verify your account before logging in.');
+      toast.success('Account created! Please verify your email before logging in.');
+      return user.uid;
     } catch (error: any) {
       console.error('Sign up error:', error);
       toast.error(error.message || 'Failed to create account');

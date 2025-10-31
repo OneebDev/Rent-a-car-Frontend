@@ -10,7 +10,7 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const location = useLocation();
-  const { user, logout } = useAuth();
+  const { user, logout, isEmailVerified } = useAuth();
 
   const navLinks = [
     { name: "Home", path: "/" },
@@ -88,7 +88,7 @@ const Navbar = () => {
 
           {/* CTA Buttons - Desktop */}
           <div className="hidden md:flex items-center gap-3">
-            {user ? (
+            {user && isEmailVerified ? (
               <div className="relative">
                 <Button
                   variant="outline"
@@ -181,7 +181,7 @@ const Navbar = () => {
                 </Link>
               ))}
               <div className="space-y-2">
-                {user ? (
+                {user && isEmailVerified ? (
                   <div className="space-y-2">
                     <div className="px-4 py-2 text-sm text-muted-foreground border-b border-border">
                       <div className="font-medium">{getUserDisplayName()}</div>
